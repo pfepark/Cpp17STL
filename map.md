@@ -31,3 +31,20 @@ for (const auto&b : billionaires)
 }
 ```
 
+##### 요소의 키를 효율적으로 변경
+
+```c++
+// https://en.cppreference.com/w/cpp/container/map/extract
+std::map<int, string> race {
+    {1,"mario"}, {2, "lugi"}, {3, "bowser"}, {4, "peach"}, {5, "yoshi"}, {6, "koopa"}
+};
+
+auto a (race.extract(3));		// node_type으로 추출되어 map에서 빠진다.
+auto b (race.extract(5));
+
+std::swap(a.key(), b.key());	// node간에 key를 swap하고
+
+race.insert(std::move(a));		// 다시 맵에 삽입하면 된다.
+race.insert(std::move(b));
+```
+
