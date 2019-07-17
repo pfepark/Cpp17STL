@@ -48,3 +48,36 @@ race.insert(std::move(a));		// 다시 맵에 삽입하면 된다.
 race.insert(std::move(b));
 ```
 
+##### std::unordered_map을 사용자 지정 타입으로 사용
+
+```c++
+struct coord {
+    int x;
+    int y;
+}
+
+// 사용자 정의 타입에는 비교 연산자 정의와 해시 함수가 필요하다.
+bool operator==(const coord& l, const coord& r)
+{
+    return l.x == r.x && l.y == r.y;
+}
+
+// std namespace를 열어 자신만의 특수화된 std::hash 템플릿 구조체를 생성한다.
+namespace std
+{
+    template<>
+    struct hash<coord>
+    {
+        using argument_type = coord;
+        using result_type = size_t;
+        
+        result_type operator()(const argument_type& c) const
+        {
+            // 예제이므로 굉장한 약식으로 만들어졌다.
+            // https://stackoverflow.com/questions/17016175/c-unordered-map-using-a-custom-class-type-as-the-key 를 참고하자.
+            return static_cast<result_type>(c.x) + static_cast<result_type>(c.y);
+        }
+    }
+}
+```
+
