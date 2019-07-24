@@ -98,3 +98,54 @@ int main()
 }
 ```
 
+##### std::map을 이용해 단어 빈도수 구현
+
+```c++
+// 덧붙여진 쉼표, 마침표, 콜론을 단어로부터 분리하는 헬퍼함수
+std::string filter_punctuation(const std::string& s)
+{
+    const char* forbidden {".,:;"};
+    const auto idx_start(s.find_first_not_of(forbidden));
+    const auto idx_end(s.find_last_not_of(forbidden));
+    return s.substr(idx_start, idx_end - idx_start + 1);
+}
+
+int main()
+{
+    std::map<std::string, size_t> words;
+    int max_word_len {0};
+    
+    std::string s;
+    while (std::cin >> s)
+    {
+        // 입력된 단어에서 쉼표, 마침표, 콜론등을 분리
+        auto filtered(filter_punctutaion(s));
+        
+        // 해당 단어가 지금까지 나온 단어 중 가징 긴 경우 max_word_len 변수를 갱신
+        // (출력시 들여쓰기를 위한 변수)
+        max_word_len = std::max(max_word_len, filtered.length());
+        
+        // 맵안에서 단어의 카운터 값을 증가
+        ++words[filtered];
+    }
+    
+    // 알파벳순으로 정렬되어 있는 map을 빈도수의 내림차순으로 정렬
+    std::vector<std::pair<std::string, size_t>> word_counts;
+    word_counts.reserve(words.size());
+    std::move(std::begin(words), std::end(words), std::back_inserter(word_counts));
+    
+    std::sort(std::begin(words_counts), std::end(word_counts),
+              [](const auto& a, const auto& b)
+              {
+                 return a.second > b.second; 
+              });
+    
+    // 들여쓰기를 위한 std::setw 사용
+    std::cout <<"# " << std::setw(max_word_len) << "<WORD>" << " #<COUNT>\n";
+    for(const auto& [word, count] : word_counts)
+    {
+        std::cout << std::setw(max_word_len + 2) << word << " #" << count << 'n';
+    }
+}
+```
+
