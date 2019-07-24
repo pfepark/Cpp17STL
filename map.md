@@ -81,3 +81,20 @@ namespace std
 }
 ```
 
+##### 중복된 사용자 입력 검출 및 sdt::set을 이용한 알파벳순 출력
+
+```c++
+using namespace std;
+int main()
+{
+    set<std::string> s;
+    
+    std::istream_iterator<string> it{cin};
+    std::istream_iterator<string> end;
+    
+    std::copy(it, end, inserter(s, s.end()));
+    
+    // std::set의 내용을 출력.
+}
+```
+
