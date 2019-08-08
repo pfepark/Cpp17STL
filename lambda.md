@@ -40,3 +40,36 @@ auto count (
 ###### constexpr
 
 constexpr로 명시적으로 표시하면 constexpr 함수의 기준을 충족하지 않을 경우 컴파일러 오류를 일으킬 것이다. constexpr 함수와 람다 표현식의 장점은 컴파일러가 해당 결과물을 컴파일하는 동안 컴파일 시간 상수 파라미터로 호출할 수 있을지를 평가할 수 있다는 것이다. 즉, 나중에 바이너리 단계에서 코드의 양이 줄어드는 장점이 있다.
+
+##### 병합을 이용해 함수 구성
+
+```c++
+template<typename T, typename ...Ts>
+auto concat(T t, Ts ...ts)
+{
+    // if constexpr은 재귀 단계에서 왼쪽으로 병합되도록 한 개 이상의 함구 있는지를 확인한다.
+    if constexpr (sizeof...(ts) > 0)
+    {
+        return [=](auto ...parameters)
+        {
+            return t(concat(ts...)(parameters...))
+        };
+    }
+    else
+    {
+        return t;
+    }
+}
+
+int main()
+{
+    auto twice([](int i) { return i * 2;});
+    auto thrice([](int i) { return i * 3;});
+    
+    auto combined( concat(twice, thrice, std::plus<int>{}) );
+    
+    std::cout << combined(2, 3);
+};
+```
+
+프로그램을 컴파일하고 실행하면 2 * 3 * (2 + 3) 인 30이 출력된다.
