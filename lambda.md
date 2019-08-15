@@ -73,3 +73,91 @@ int main()
 ```
 
 프로그램을 컴파일하고 실행하면 2 * 3 * (2 + 3) 인 30이 출력된다.
+
+##### 논리 결합을 이용해 복잡한 프레디케이트 생성
+
+```c++
+static bool begins_with_a(const std::string& s)
+{
+    return s.find("a") == 0;
+}
+
+static bool ends_with_b(const std::string& s)
+{
+    return s.rfind("b") == s.length() - 1;
+}
+
+// 첫 번째 파라미터로 논리형 AND나 OR함수를 사용할 수 있게 바이너리 함수를 받는다.
+// 나머지 두 파라미터는 predicate 함수를 받아 합친다.
+template<typename A, typename B, typename F>
+auto combine(F binary_func, A a, B b)
+{
+    return [=](auto param)
+    {
+        return binary_func(a(param), b(param));
+    };
+}
+
+int main()
+{
+    auto a_xxx_b (combine(logical_and<>{},	// std::logical_and는 인스턴스로 만들어야하는 템플릿 클래스.
+                         begins_with_a, ends_with_b));
+    
+    copy_if(istream_iterator<string>{cin}, {},
+           ostream_iterator<string>{cout, ","},
+           a_xxx_b);
+    cout << '\n';
+}
+
+//https://en.cppreference.com/w/cpp/utility/functional
+//std::logical_or, std::logical_and 외 다른 유용한 함수 객체를 제공하고 있다.
+
+// 실행결과
+"ac cb ab axxxb" -> ab, axxb,
+```
+
+##### 같은 입력으로 두 개 이상의 함수 호출
+
+단일 호출을 여러 파라미터로 복수의 리시버에 전달하기 위한 람다 표현식
+
+```c++
+// 임의의 함수들을 파라미터로 받아 하나의 파라미터만 받는 람다 표현식으로 반환
+static auto multicall(auto ...functions)
+{
+    return [=](auto x) {
+        // std::initializer_list 생성자를 사용해 호출된 파라밑터 묶음인 functions를 확장
+        (void)std::initializer_list<int>{ 
+          ((void)functions(x), 0)...  
+        };
+    }
+}
+
+// 함수 f와 파라미터 묶음 xs를 받는다.
+// 해당 파라미터 묶음의 각각에 대해 f 함수를 호출한다.
+// for_each(f, 1, 2, 3) 호출이 f(1); f(2); f(3);의 연속호출로 이어진다.
+static auto for_each(auto f, auto ...xs)
+{
+    (void)std::initializer_list<int> {
+        ((void)f(xs), 0)...	//(f(xs), 0)... 으로 감싸 0을 초기화 목록에 넣어 반환값을 버림
+    };
+}
+
+static auto brace_print(char a, char b)
+{
+    return [=](auto x) {
+        std::cout << a << x << b << ", ";
+    };
+}
+
+int main()
+{
+    auto f(brace_print('(', ')'));
+    auto g(brace_print('[', ']'));
+    auto h(brace_print('{', '}'));
+    auto nl([](auto), { std::cout << "\n"; });
+    
+    auto call_fgh(multi_call(f, g, h, nl));
+    for_each(call_fgh, 1, 2, 3, 4, 5);
+}
+```
+
