@@ -161,3 +161,94 @@ int main()
 }
 ```
 
+##### transform_if 구현
+
+```c++
+template<typename T>
+auto map(T fn)
+{
+    return [=](auto reduce_fn) {
+        return [=](auto accum, auto input) {
+            return reduce_fn(accum, fn(input));
+        };
+    };
+}
+
+template<typename T>.
+auto filter(T predicate)
+{
+    return [=](auto reduce_fn) {
+        return [=](auto accum, auto input) {
+            if (prediccate(input)) {
+                return reduce_fn(accum, input);
+            }
+            else {
+            	return accum;
+            }
+        };
+    };
+}
+
+int main()
+{
+    std::istream_iterator<int> it {std::cin};
+    std::istream_iterator<int> end_it;
+    
+    auto even([](int i) { reeturn i % 2 == 0;});
+    auto twice([](int i) { reeturn i * 2;});
+    
+    // 범위 내 각각의 값을 참조하는 반복자인 it에 할당한 다음 반복자를 리턴
+    auto copy_and_advance([](auto it, auto input){
+        *it = input;
+        return ++it;
+    });
+    
+    std::accumulate(it, end_it,
+        std::ostream_iterator<int>{std::cout, ", "},
+        filter(even)(
+            map(twice)(
+                copy_and_advance
+            )
+        ));
+        std::cout << '\n';
+}
+
+1 2 3 4 5 6 입력에 대해
+4, 8, 12  // 홀수를 제외하고 짝수값만 두 배로 곱해 출력한다.
+```
+
+##### 컴파일 시간에 입력값의 데카르트 곱 생성
+
+```c++
+static void print(int x, int y)
+{
+    std::cout << "(" << x << ", " << y << ")\n";
+}
+
+int main()
+{
+    constexpr auto call_cart
+    (
+        [=](auto f, auto x, auto ...rest) constexpr
+        {
+          (void)std::initializer_list<int>
+          {
+              (((x < rest) ? (void)f(x, rest) : (void)0), 0)...
+          };  
+        }
+    );
+    
+    constexpr auto cartesian([=](auto ...xs) constexpr {
+        return [=](auto f) constexpr {
+            (void)std::initializer_list<int> {
+                ((void)call_cart(f, xs, xs...), 0)...
+            };
+        };
+    });
+    
+    constexpr auto print_cart(cartesian(1,2,3));
+    
+    print_cart(print);
+}
+```
+
